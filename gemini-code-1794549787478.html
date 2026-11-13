@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>장인어른·장모님 환갑 기념 나트랑 대가족 여행</title>
+    <style>
+        :root {
+            --bg-color: #FDFBF7;
+            --card-bg: #FFFFFF;
+            --primary: #2C5E3B;
+            --accent: #D97706;
+            --text-main: #2D3748;
+            --text-muted: #718096;
+            --border-color: #E2E8F0;
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 20px;
+            font-size: 17px;
+        }
+
+        /* 보안 인증 화면 스타일 */
+        #auth-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .auth-box {
+            background: #ffffff;
+            padding: 40px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 320px;
+            border: 1px solid var(--border-color);
+        }
+
+        .auth-box h2 { margin-bottom: 10px; font-size: 20px; color: var(--primary); }
+        .auth-box p { margin-bottom: 20px; font-size: 13px; color: var(--text-muted); }
+        
+        .pin-input {
+            width: 100%;
+            padding: 12px;
+            font-size: 24px;
+            text-align: center;
+            letter-spacing: 8px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .pin-input:focus { border-color: var(--primary); }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .submit-btn:hover { opacity: 0.9; }
+        #error-msg { color: #e74c3c; font-size: 12px; margin-top: 10px; height: 15px; }
+
+        /* 실제 콘텐츠 영역 (비인증 시 숨김) */
+        #protected-content { 
+            display: none; 
+            max-width: 900px; 
+            margin: 0 auto; 
+        }
+
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 30px 20px;
+            border-radius: var(--radius);
+            text-align: center;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        header h1 {
+            font-size: 1.6rem;
+            margin-bottom: 10px;
+            word-break: keep-all;
+        }
+
+        header p {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .notice-box {
+            background: #FFFBEB;
+            border-left: 4px solid var(--accent);
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+            color: #92400E;
+        }
+
+        section {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+            border: 1px solid var(--border-color);
+        }
+
+        h2 {
+            font-size: 1.3rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--bg-color);
+        }
+
+        /* 탭 및 필터 UI */
+        .tab-container {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .tab-btn {
+            background: #EDF2F7;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            flex: 1;
+            min-width: 90px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .filter-container {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .filter-btn {
+            background: #F7FAFC;
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+            font-weight: bold;
+        }
+
+        /* 타임테이블 테이블 스타일 */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+            min-width: 650px;
+        }
+
+        th, td {
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background-color: #F7FAFC;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        .badge-식사 { background: #FEFCBF; color: #744210; }
+        .badge-관광 { background: #C6F6D5; color: #22543D; }
+        .badge-이동 { background: #EBF8FF; color: #2B6CB0; }
+        .badge-휴식 { background: #E2E8F0; color: #4A5568; }
+        .badge-쇼핑 { background: #FED7D7; color: #9B2C2C; }
+        .badge-항공 { background: #EDF2F7; color: #1A202C; }
+
+        /* 링크 버튼 스타일 */
+        .link-btn-group {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 6px;
+        }
+
+        .map-btn {
+            display: inline-block;
+            background: #EDF2F7;
+            color: var(--primary);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            text-decoration: none;
+            font-weight: bold;
+            border: 1px solid #CBD5E0;
+        }
+        .map-btn:hover { background: #E2E8F0; }
+
+        .info-btn {
+            display: inline-block;
+            background: #FEFCBF;
+            color: #744210;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            text-decoration: none;
+            font-weight: bold;
+            border: 1px solid #F6E05E;
+        }
+        .info-btn:hover { background: #FAF089; }
+
+        /* 장소 카드 그리드 */
+        .place-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .place-card {
+            background: #F7FAFC;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .place-card h3 {
+            font-size: 1.05rem;
+            color: var(--primary);
+            margin-bottom: 6px;
+        }
+
+        .place-card p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        /* 체크리스트 스타일 */
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 1rem;
+        }
+
+        .checklist-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        .checklist-item.checked span {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        .progress-bar-container {
+            background: var(--border-color);
+            border-radius: 8px;
+            height: 16px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .progress-bar {
+            background: var(--primary);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        /* 하단 조작 버튼 */
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 25px;
+            margin-bottom: 40px;
+        }
+
+        button.action-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.2s;
+            flex: 1;
+            min-width: 140px;
+        }
+
+        button.action-btn:hover { opacity: 0.9; }
+        .btn-accent { background-color: var(--accent) !important; }
+
+        @media print {
+            body { background: white; padding: 0; font-size: 12pt; }
+            #auth-screen, .btn-group, .notice-box, .tab-container, .filter-container { display: none !important; }
+            #protected-content { display: block !important; padding: 0; }
+            section { box-shadow: none; border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; page-break-inside: avoid; }
+            .checklist-item input[type="checkbox"] {
+                appearance: none; border: 2px solid #333; width: 16px; height: 16px; border-radius: 3px; display: inline-block; position: relative;
+            }
+            .checklist-item.checked input[type="checkbox"]::after {
+                content: "✔"; position: absolute; top: -3px; left: 1px; font-size: 12px; color: #333;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. 비밀번호 입력 인증 화면 (비밀번호: 0001) -->
+    <div id="auth-screen">
+        <div class="auth-box">
+            <h2>🔒 접근 권한 확인</h2>
+            <p>나트랑 대가족 여행 일정표</p>
+            <p style="margin-bottom:15px; font-size:12px;">지정된 4자리 코드(0001)를 입력해주세요.</p>
+            <input type="password" id="pin-input" class="pin-input" maxlength="4" placeholder="••••" autofocus>
+            <button class="submit-btn" onclick="verifyPin()">확인</button>
+            <div id="error-msg"></div>
+        </div>
+    </div>
+
+    <!-- 2. 실제 여행 일정표 콘텐츠 영역 (인증 성공 시 표시) -->
+    <div id="protected-content">
+        <header>
+            <h1>장인어른·장모님 환갑 기념 나트랑 대가족 여행</h1>
+            <p>기간: 2027년 1월 6일(수) ~ 1월 10일(일) (4박 5일) | 인원: 9명 (성인 7, 아동 2)</p>
+            <p>숙소: 푸억하이 에어비앤비 (Đường số 2B, Lê Hồng Phong 2)</p>
+        </header>
+
+        <div class="notice-box">
+            💡 <strong>안내:</strong> 본 페이지는 외부 서버 연동이나 로그인 없이 브라우저 내에서 안전하게 동작합니다. 준비물 체크 상태는 이 기기의 로컬 저장소에 자동 저장됩니다.
+        </div>
+
+        <!-- 메타 정보 및 핵심 장소 링크 카드 섹션 -->
+        <section>
+            <h2>✈️ 숙소·주요 명소 공식 지도 및 정보 모음</h2>
+            <p style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 15px;">여행 중 현장에서 바로 위치와 정보를 확인할 수 있는 공식 링크 모음입니다.</p>
+            
+            <div class="place-grid">
+                <div class="place-card">
+                    <h3>🏡 푸억하이 에어비앤비 (숙소)</h3>
+                    <p>Đường số 2B, KĐT Lê Hồng Phong 2 STH03A.34, Nha Trang</p>
+                    <div class="link-btn-group">
+                        <a class="map-btn" href="https://www.google.com/maps/search/?api=1&query=L%C3%AA+H%E1%BB%93ng+Phong+2+Nha+Trang" target="_blank" rel="noopener noreferrer">📍 구글 지도</a>
+                    </div>
+                </div>
+
+                <div class="place-card">
+                    <h3>♨️ 아이리조트 스파 (머드온천)</h3>
+                    <p>프라이빗 머드탕 및 미온수 워터파크</p>
+                    <div class="link-btn-group">
+                        <a class="map-btn" href="https://www.google.com/maps/search/?api=1&query=I-resort+Nha+Trang" target="_blank" rel="noopener noreferrer">📍 구글 지도</a>
+                        <a class="info-btn" href="https://www.i-resort.vn" target="_blank" rel="noopener noreferrer">🌐 공식 홈페이지</a>
+                    </div>
+                </div>
+
+                <div class="place-card">
+                    <h3>🎡 빈원더스 나트랑</h3>
+                    <p>섬 테마파크, 아쿠아리움, 동물원, 케이블카</p>
+                    <div class="link-btn-group">
+                        <a class="map-btn" href="https://www.google.com/maps/search/?api=1&query=VinWonders+Nha+Trang" target="_blank" rel="noopener noreferrer">📍 구글 지도</a>
+                        <a class="info-btn" href="https://vinwonders.com" target="_blank" rel="noopener noreferrer">🌐 공식 홈페이지</a>
+                    </div>
+                </div>
+
+                <div class="place-card">
+                    <h3>🏛️ 포나가르 사원</h3>
+                    <p>고대 참파 유적지 및 단체 사진 명소</p>
+                    <div class="link-btn-group">
+                        <a class="map-btn" href="https://www.google.com/maps/search/?api=1&query=Po+Nagar+Cham+Towers" target="_blank" rel="noopener noreferrer">📍 구글 지도</a>
+                    </div>
+                </div>
+
+                <div class="place-card">
+                    <h3>🛍️ 담시장 (덤시장)</h3>
+                    <p>라탄백, 의류, 건망고 쇼핑 시장</p>
+                    <div class="link-btn-group">
+                        <a class="map-btn" href="https://www.google.com/maps/search/?api=1&query=Dam+Market+Nha+Trang" target="_blank" rel="noopener noreferrer">📍 구글 지도</a>
+                    </div>
+                </div>
+
+                <div class="place-card">
+                    <h3>🍽️ 맛집 (촌촌킴·마담프엉·목식당)</h3>
+                    <p>가족 백반, 베트남 가정식, 해산물 만찬</p>
+                    <div class="link-btn-group">
+                        <a class="map-btn" href="https://www.google.com/maps/search/?api=1&query=Chon+Chon+Kim+Nha+Trang" target="_blank" rel="noopener noreferrer">📍 촌촌킴</a>
+                        <a class="map-btn" href="https://www.google.com/maps/search/?api=1&query=Madam+Phuong+Nha+Trang" target="_blank" rel="noopener noreferrer">📍 마담프엉</a>
+                        <a class="map-btn" href="https://www.google.com/maps/search/?api=1&query=Mok+Seafood+Nha+Trang" target="_blank" rel="noopener noreferrer">📍 목식당</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 일자별 타임테이블 섹션 -->
+        <section>
+            <h2>📅 일자별 상세 타임테이블</h2>
+            
+            <!-- 일차 탭 -->
+            <div class="tab-container">
+                <button class="tab-btn active" onclick="switchDay(1)">1일차 (1/6 수)</button>
+                <button class="tab-btn" onclick="switchDay(2)">2일차 (1/7 목)</button>
+                <button class="tab-btn" onclick="switchDay(3)">3일차 (1/8 금)</button>
+                <button class="tab-btn" onclick="switchDay(4)">4일차 (1/9 토)</button>
+                <button class="tab-btn" onclick="switchDay(5)">5일차 (1/10 일)</button>
+            </div>
+
+            <!-- 카테고리 필터 -->
+            <div class="filter-container">
+                <button class="filter-btn active" onclick="filterCategory('전체')">전체 보기</button>
+                <button class="filter-btn" onclick="filterCategory('식사')">식사/배달</button>
+                <button class="filter-btn" onclick="filterCategory('관광')">관광/휴식</button>
+                <button class="filter-btn" onclick="filterCategory('이동')">이동/항공</button>
+                <button class="filter-btn" onclick="filterCategory('쇼핑')">쇼핑/준비</button>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 15%;">시간</th>
+                            <th style="width: 15%;">구분</th>
+                            <th style="width: 25%;">일정명</th>
+                            <th style="width: 20%;">이동 / 식사</th>
+                            <th style="width: 25%;">상세 메모 및 체크포인트</th>
+                        </tr>
+                    </thead>
+                    <tbody id="timetableBody">
+                        <!-- JavaScript로 동적 렌더링 -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 준비물 체크리스트 섹션 -->
+        <section>
+            <h2>🎒 준비물 체크리스트</h2>
+            <div class="progress-text" id="progressText">준비 완료: 0 / 10 (0%)</div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+
+            <div id="checklistContainer">
+                <div class="checklist-item" data-id="p01">
+                    <input type="checkbox" id="p01" onchange="saveChecklist()">
+                    <label for="p01"><span><strong>[개인용 p01]</strong> 여권 및 항공권 E-티켓 (유효기간 6개월 이상 확인)</span></label>
+                </div>
+                <div class="checklist-item" data-id="p02">
+                    <input type="checkbox" id="p02" onchange="saveChecklist()">
+                    <label for="p02"><span><strong>[개인용 p02]</strong> 상비약 (소화제, 지사제, 감기약, 개인 처방약)</span></label>
+                </div>
+                <div class="checklist-item" data-id="p03">
+                    <input type="checkbox" id="p03" onchange="saveChecklist()">
+                    <label for="p03"><span><strong>[개인용 p03]</strong> 수영복, 아쿠아슈즈, 선글라스, 모자</span></label>
+                </div>
+                <div class="checklist-item" data-id="p04">
+                    <input type="checkbox" id="p04" onchange="saveChecklist()">
+                    <label for="p04"><span><strong>[공통용 p04]</strong> 달러 및 베트남 동 현금, 트래블로그 카드</span></label>
+                </div>
+                <div class="checklist-item" data-id="p05">
+                    <input type="checkbox" id="p05" onchange="saveChecklist()">
+                    <label for="p05"><span><strong>[공통용 p05]</strong> 멀티탭, 보조배터리, 충전기 케이블</span></label>
+                </div>
+                <div class="checklist-item" data-id="p06">
+                    <input type="checkbox" id="p06" onchange="saveChecklist()">
+                    <label for="p06"><span><strong>[공통용 p06]</strong> 물티슈, 티슈, 모기퇴치제, 자외선 차단제</span></label>
+                </div>
+                <div class="checklist-item" data-id="p07">
+                    <input type="checkbox" id="p07" onchange="saveChecklist()">
+                    <label for="p07"><span><strong>[공통용 p07]</strong> 환갑 축하 파티 용품 (토퍼, 미니 현수막 등)</span></label>
+                </div>
+                <div class="checklist-item" data-id="p08">
+                    <input type="checkbox" id="p08" onchange="saveChecklist()">
+                    <label for="p08"><span><strong>[활동용 p08]</strong> 유모차 (빈원더스 및 시내 이동용)</span></label>
+                </div>
+                <div class="checklist-item" data-id="p09">
+                    <input type="checkbox" id="p09" onchange="saveChecklist()">
+                    <label for="p09"><span><strong>[활동용 p09]</strong> 어린이용 비상 간식 및 물병</span></label>
+                </div>
+                <div class="checklist-item" data-id="p10">
+                    <input type="checkbox" id="p10" onchange="saveChecklist()">
+                    <label for="p10"><span><strong>[활동용 p10]</strong> 기내 숙면용 안대 및 목베개</span></label>
+                </div>
+            </div>
+        </section>
+
+        <!-- 하단 조작 버튼 -->
+        <div class="btn-group">
+            <button onclick="sharePage()" class="action-btn btn-accent">🔗 링크 복사</button>
+            <button onclick="window.print()" class="action-btn">🖨️ 인쇄 / PDF 저장</button>
+            <button onclick="resetChecklist()" class="action-btn" style="background-color: #718096;">🔄 체크 초기화</button>
+        </div>
+    </div>
+
+    <script>
+        // 비밀번호 인증 로직 (비밀번호: 0001)
+        const CORRECT_PIN = "0001";
+
+        function verifyPin() {
+            const inputVal = document.getElementById("pin-input").value;
+            const errorMsg = document.getElementById("error-msg");
+
+            if (inputVal === CORRECT_PIN) {
+                document.getElementById("auth-screen").style.display = "none";
+                document.getElementById("protected-content").style.display = "block";
+            } else {
+                errorMsg.innerText = "코드가 일치하지 않습니다.";
+                document.getElementById("pin-input").value = "";
+                document.getElementById("pin-input").focus();
+            }
+        }
+
+        document.getElementById("pin-input").addEventListener("keyup", function(event) {
+            if (event.key === "Enter") {
+                verifyPin();
+            }
+        });
+
+        // 타임테이블 데이터 구조
+        const timetableData = {
+            1: [
+                { time: "19:30", category: "항공", title: "청주국제공항 출발", transport: "항공편 (직항)", memo: "출발 2시간 30분 전(17:00) 공항 도착 및 수속" },
+                { time: "23:00", category: "항공", title: "깜라인 국제공항 도착", transport: "입국 수속 및 수하물", memo: "유심/이심 활성화, 입국장 편의점 생수 구매" },
+                { time: "23:45", category: "이동", title: "공항 → 숙소 이동", transport: "에어비앤비 픽업 (16인승)", memo: "호스트 사전 예약 차량 탑승 (약 45분 소요)" },
+                { time: "24:30", category: "휴식", title: "에어비앤비 체크인 및 취침", transport: "숙소 휴식", memo: "1층 방·욕실은 계단 이용이 불편한 부모님 배정" }
+            ],
+            2: [
+                { time: "09:30", category: "식사", title: "숙소 조식 (배달)", transport: "배달 (반미판)", memo: "그랩/배달K 이용. 소고기 반미 + 아이용 에그·치즈 반미" },
+                { time: "11:00", category: "이동", title: "숙소 출발 (전담 차량 탑승)", transport: "16인승 전담 기사 대절", memo: "오전 11시~오후 8시 30분 (약 9.5시간 대절 시작)" },
+                { time: "11:30", category: "식사", title: "시내 점심 식사", transport: "외식 (촌촌킴)", memo: "베트남 백반식. 에어컨 좌석 <br><a class='map-btn' href='https://www.google.com/maps/search/?api=1&query=Chon+Chon+Kim+Nha+Trang' target='_blank'>📍 촌촌킴 지도</a>" },
+                { time: "13:00", category: "관광", title: "아이리조트 스파 (머드온천)", transport: "전담 차량 이동", memo: "9인 전용 프라이빗 머드탕 + 미온수 풀 <br><a class='map-btn' href='https://www.google.com/maps/search/?api=1&query=I-resort+Nha+Trang' target='_blank'>📍 아이리조트 지도</a>" },
+                { time: "16:00", category: "휴식", title: "숙소 복귀 및 오후 휴식", transport: "전담 차량 이동", memo: "전원 샤워, 아이 낮잠 및 어르신 체력 회복 시간" },
+                { time: "17:30", category: "쇼핑", title: "롯데마트 냐짱점 장보기", transport: "전담 차량 이동", memo: "생수, 컷팅 망고, 맥주, 아이 간식 구매 <br><a class='map-btn' href='https://www.google.com/maps/search/?api=1&query=Lotte+Mart+Nha+Trang' target='_blank'>📍 롯데마트 지도</a>" },
+                { time: "19:00", category: "식사", title: "시내 저녁 만찬", transport: "외식 (마담프엉)", memo: "반쎄오, 분짜, 쌀국수 <br><a class='map-btn' href='https://www.google.com/maps/search/?api=1&query=Madam+Phuong+Nha+Trang' target='_blank'>📍 마담프엉 지도</a>" },
+                { time: "20:30", category: "휴식", title: "숙소 복귀 및 자유시간", transport: "전담 차량 종료", memo: "숙소 1층 거실에서 망고·맥주 다과회" }
+            ],
+            3: [
+                { time: "08:30", category: "식사", title: "숙소 조식 (배달)", transport: "배달 (안어이/포홍)", memo: "따뜻한 소고기 쌀국수(퍼보) 배달" },
+                { time: "09:30", category: "이동", title: "빈원더스 선착장 이동 및 입장", transport: "7인승 그랩 2대", memo: "선착장 도착 후 바다 위 케이블카 탑승" },
+                { time: "10:30", category: "관광", title: "킹스가든(동물원) & 아쿠아리움", transport: "도보 / 유모차 대여", memo: "입구 유모차 대여 필수. 평지 코스 및 동물 관람 <br><a class='map-btn' href='https://www.google.com/maps/search/?api=1&query=VinWonders+Nha+Trang' target='_blank'>📍 빈원더스 지도</a>" },
+                { time: "13:00", category: "식사", title: "빈원더스 섬 내 점심 식사", transport: "외식 (섬 내 식당)", memo: "롯데리아 또는 쾌적한 실내 푸드코트 이용" },
+                { time: "14:30", category: "관광", title: "플라워돔(식물원) 및 카페 휴식", transport: "도보 관람", memo: "체력 안배: 부모님·아이 피로 시 조기 복귀 가능" },
+                { time: "17:00", category: "휴식", title: "숙소 복귀 및 샤워", transport: "7인승 그랩 2대", memo: "선착장 앞 대기 그랩 호출 및 온수 샤워" },
+                { time: "18:30", category: "식사", title: "숙소 거실 저녁 배달 파티", transport: "배달K (바비큐·해산물)", memo: "그릴 새우, 가리비 치즈구이, 삼겹살 배달" }
+            ],
+            4: [
+                { time: "09:30", category: "식사", title: "숙소 내 자체 브런치", transport: "숙소 조리", memo: "마트 구매 식빵 토스트, 계란후라이, 과일" },
+                { time: "10:30", category: "관광", title: "포나가르 사원 관람", transport: "7인승 그랩 2대", memo: "붉은 벽돌 사원 배경 단체 사진 촬영 <br><a class='map-btn' href='https://www.google.com/maps/search/?api=1&query=Po+Nagar+Cham+Towers' target='_blank'>📍 포나가르 지도</a>" },
+                { time: "11:30", category: "쇼핑", title: "담시장(덤시장) 쇼핑", transport: "7인승 그랩 2대", memo: "휴양지 원피스, 라탄백, 건망고 쇼핑 <br><a class='map-btn' href='https://www.google.com/maps/search/?api=1&query=Dam+Market+Nha+Trang' target='_blank'>📍 담시장 지도</a>" },
+                { time: "13:00", category: "식사", title: "점심 식사 및 골드코스트 마트", transport: "외식 (시내 맛집)", memo: "점심 식사 및 커피·소스류 최종 쇼핑" },
+                { time: "15:00", category: "관광", title: "대가족 힐링 마사지 (90분)", transport: "7인승 그랩 2대", memo: "부모님 동반 시내 쾌적한 스파 사전 예약" },
+                { time: "17:00", category: "휴식", title: "숙소 복귀, 짐 패킹 & 아이 낮잠", transport: "7인승 그랩 2대", memo: "캐리어 최종 짐 싸기 및 아이 낮잠" },
+                { time: "18:30", category: "식사", title: "환갑 기념 메인 저녁 만찬", transport: "외식 (목식당)", memo: "9인 에어컨 룸 및 랍스터·새우 손질 서비스 <br><a class='map-btn' href='https://www.google.com/maps/search/?api=1&query=Mok+Seafood+Nha+Trang' target='_blank'>📍 목식당 지도</a>" },
+                { time: "20:00", category: "휴식", title: "숙소 복귀, 전원 샤워 및 환복", transport: "7인승 그랩 2대", memo: "탑승 직전 샤워 및 기내 편한 복장 환복" },
+                { time: "20:45", category: "이동", title: "숙소 최종 퇴실 → 공항 직행", transport: "에어비앤비 샌딩 (16인승)", memo: "호스트 예약 16인승 밴 탑승 (약 45분 소요)" },
+                { time: "21:30", category: "항공", title: "깜라인 국제공항 도착 및 수속", transport: "출국 수속", memo: "여유롭게 티켓팅 및 출국 심사 진행" },
+                { time: "23:30", category: "항공", title: "나트랑 출발 → 청주행 탑승", transport: "항공편 (직항)", memo: "기내 숙면 유도" }
+            ],
+            5: [
+                { time: "06:00", category: "항공", title: "청주국제공항 도착 및 귀가", transport: "입국 수속 및 자차 이동", memo: "입국 수속 후 안전하게 귀가" }
+            ]
+        };
+
+        let currentDay = 1;
+        let currentCategory = '전체';
+
+        function switchDay(day) {
+            currentDay = day;
+            document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
+                if(idx + 1 === day) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+            renderTimetable();
+        }
+
+        function filterCategory(category) {
+            currentCategory = category;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if(btn.innerText.includes(category) || (category === '전체' && btn.innerText === '전체 보기')) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            renderTimetable();
+        }
+
+        function renderTimetable() {
+            const tbody = document.getElementById('timetableBody');
+            const data = timetableData[currentDay] || [];
+            tbody.innerHTML = '';
+
+            const filtered = data.filter(item => {
+                if(currentCategory === '전체') return true;
+                return item.category === currentCategory;
+            });
+
+            if(filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:20px;">해당 카테고리의 일정이 없습니다.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${item.time}</strong></td>
+                    <td><span class="badge badge-${item.category}">${item.category}</span></td>
+                    <td><strong>${item.title}</strong></td>
+                    <td>${item.transport}</td>
+                    <td>${item.memo}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 체크리스트 로직
+        const STORAGE_KEY = 'nhatrang_2027_60th_checklist';
+        const itemIds = ['p01','p02','p03','p04','p05','p06','p07','p08','p09','p10'];
+
+        function saveChecklist() {
+            const state = {};
+            itemIds.forEach(id => {
+                const chk = document.getElementById(id);
+                if(chk) state[id] = chk.checked;
+            });
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+            updateProgress();
+        }
+
+        function loadChecklist() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if(saved) {
+                    const state = JSON.parse(saved);
+                    itemIds.forEach(id => {
+                        if(state[id] !== undefined) {
+                            const chk = document.getElementById(id);
+                            if(chk) chk.checked = state[id];
+                        }
+                    });
+                }
+            } catch(e) {}
+            updateProgress();
+        }
+
+        function updateProgress() {
+            let checkedCount = 0;
+            itemIds.forEach(id => {
+                const chk = document.getElementById(id);
+                const parent = chk ? chk.closest('.checklist-item') : null;
+                if(chk && chk.checked) {
+                    checkedCount++;
+                    if(parent) parent.classList.add('checked');
+                } else {
+                    if(parent) parent.classList.remove('checked');
+                }
+            });
+            const total = itemIds.length;
+            const percent = total > 0 ? Math.round((checkedCount / total) * 100) : 0;
+            
+            document.getElementById('progressText').innerText = `준비 완료: ${checkedCount} / ${total} (${percent}%)`;
+            document.getElementById('progressBar').style.width = `${percent}%`;
+        }
+
+        function resetChecklist() {
+            if(confirm("체크리스트를 초기화하시겠습니까?")) {
+                try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+                itemIds.forEach(id => {
+                    const chk = document.getElementById(id);
+                    if(chk) chk.checked = false;
+                });
+                updateProgress();
+            }
+        }
+
+        function sharePage() {
+            if(window.location.protocol === 'file:') {
+                alert("현재 로컬 파일(file://) 환경입니다. GitHub Pages 등에 게시한 후 링크를 공유해 주세요.");
+                return;
+            }
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                alert("현재 페이지 링크가 클립보드에 복사되었습니다!");
+            }).catch(() => {
+                prompt("아래 링크를 복사해 주세요:", window.location.href);
+            });
+        }
+
+        window.onload = function() {
+            loadChecklist();
+            renderTimetable();
+        };
+    </script>
+</body>
+</html>
